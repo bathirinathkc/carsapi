@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Car extends Model
 {
@@ -14,13 +13,14 @@ class Car extends Model
      * @var array
      */
     protected $fillable = [
-        'brand', 'modal', 'year', 'price', 'user_id', 'fuel',
-        'kilometer',
-        'mileage',
-        'no_of_owner',
-        'location',
-        'description',
+        'brand', 'modal', 'year', 'price', 'user_id', 'color','description'
     ];
-    use SoftDeletes;
+    protected $hidden = [
+        'created_at','updated_at'
+    ];
     protected $table = 'cars';
+
+    public function users() {
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

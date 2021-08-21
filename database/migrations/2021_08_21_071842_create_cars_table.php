@@ -19,16 +19,10 @@ class CreateCarsTable extends Migration
             $table->string('modal');
             $table->string('year');
             $table->string('price');
-            $table->string('color')->nullable();
-            $table->string('fuel')->nullable();
-            $table->string('kilometer')->nullable();
-            $table->string('mileage')->nullable();
-            $table->string('no_of_owner')->nullable();
-            $table->string('location')->nullable();
+            $table->string('color')->nullable();          
             $table->text('description')->nullable();
             $table->integer('user_id');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

@@ -6,11 +6,13 @@ use App\Models\Car;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\Utillity;
 use JWTAuth;
+use Auth;
 
 class CarController extends Controller
 {
-
+    use Utillity;
     /**
      * Display a listing of the resource.
      *
@@ -18,25 +20,27 @@ class CarController extends Controller
      */
     public function index(Request $request)
     {
-        $car = Car::get();
+        try {
+            $offset_input = $request->input('offset');
+            $limit_input = $request->input('limit');
+            $offset = isset($offset_input) ? $offset_input : 0;
+            $limit = isset($limit_input) ? $limit_input : 10;
+            
+            $car = Car::with('users')->offset($offset)->limit($limit)->get();
 
-        if (!empty($car)) {
-            $response = [
-                'code'  => 201,
-                'status'    => true,
-                'message'    => "Data found",
-                'car'    => $car,
-            ];
-            return response()->json($response, 201);
-        } else {
-            $response = [
-                'code'  => 400,
-                'status'    => false,
-                'message'    => "Data not found",
-                'car'    => "",
-            ];
-            return response()->json($response, 400);
+            if(count($car) == 0){
+                $response = $this->getReponse(false, 400, 'Data Not Found');
+            }else{
+                $car['offset'] = $offset;
+                $car['limit'] = $limit;
+                $car['count'] = Car::count(); 
+                $response = $this->getReponse(true, 200, 'Success', $car);
+            }
+        } catch (\Exception $e) {
+            $response = $this->getReponse(false, 500, $e->getMessage());  
         }
+
+        return $response;
     }
 
     /**
@@ -69,51 +73,47 @@ class CarController extends Controller
     }
 
     /**
-     * Store new car
-     *
-     * @return \Illuminate\Http\Response
-     */
+     * Funciton to store new car
+     * * @param {*} brand 
+     * * @param {*} modal 
+     * * @param {*} year 
+     * * @param {*} price 
+     * @return
+    */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'brand' => 'required|string|max:255',
-            'modal' => 'required|string|max:255',
-            'year' => 'required|string|max:255',
-            'price' => 'required|string|max:255',
-        ]);
+        try {
 
-        if ($validator->fails()) {
-            $response = [
-                'code'  => 400,
-                'status'    => false,
-                'message'    => $validator->errors(),
-            ];
-            return response()->json($response, 400);
+            $validator = Validator::make($request->all(), [
+                'brand' => 'required|string|max:255',
+                'modal' => 'required|string|max:255',
+                'year' => 'required|string|max:255',
+                'price' => 'required|string|max:255',
+            ]);
+
+            if ($validator->fails()) {
+                return $response = $this->getReponse(false, 400, 'Validation Error',$validator->errors());
+            }
+            $user = Auth::user();
+            $user_id = $user['id'];
+
+            $car = Car::create([
+                'brand' => $request->get('brand'),
+                'modal' => $request->get('modal'),
+                'year' => $request->get('year'),
+                'price' => $request->get('price'),
+                'color' => $request->get('color'),
+                'description' => $request->get('description'),
+                'user_id' => $user_id,
+                'user' => $user
+            ]);
+
+            $response = $this->getReponse(true, 200, 'Car Created Successfully',$car);
+        } catch (\Exception $e) {
+            $response = $this->getReponse(false, 500, $e->getMessage());  
         }
 
-        $user_id = JWTAuth::parseToken()->authenticate()->id;
-        $car = Car::create([
-            'brand' => $request->get('brand'),
-            'modal' => $request->get('modal'),
-            'year' => $request->get('year'),
-            'price' => $request->get('price'),
-            'color' => $request->get('color'),
-            'fuel' => $request->get('fuel'),
-            'kilometer' => $request->get('kilometer'),
-            'mileage' => $request->get('mileage'),
-            'no_of_owner' => $request->get('no_of_owner'),
-            'location' => $request->get('location'),
-            'description' => $request->get('description'),
-            'user_id' => $user_id,
-        ]);
-
-        $response = [
-            'code'  => 201,
-            'status'    => true,
-            'message'    => "Created Successfully",
-            'car'    => $car,
-        ];
-        return response()->json($response, 201);
+        return $response;
     }
 
 
@@ -184,30 +184,28 @@ class CarController extends Controller
      */
     public function userCars(Request $request)
     {
-        $user_id = JWTAuth::parseToken()->authenticate()->id;
+        try {
+            $offset_input = $request->input('offset');
+            $limit_input = $request->input('limit');
+            $offset = isset($offset_input) ? $offset_input : 0;
+            $limit = isset($limit_input) ? $limit_input : 10;
 
-        // $user_id = 1;
-        $cars = Car::where("user_id", $user_id)->get();
+            $user_id = JWTAuth::parseToken()->authenticate()->id;
+            $cars = Car::where("user_id", $user_id)->offset($offset)->limit($limit)->get();
 
-        if (!empty($cars)) {
-
-
-            $response = [
-                'code'  => 201,
-                'status'    => true,
-                'message'    => "Data found",
-                'cars'    => $cars,
-            ];
-            return response()->json($response, 201);
-        } else {
-            $response = [
-                'code'  => 400,
-                'status'    => false,
-                'message'    => "Data not found",
-                'cars' => ''
-            ];
-            return response()->json($response, 400);
+            if(count($cars) == 0){
+                $response = $this->getReponse(false, 400, 'Data Not Found');
+            }else{
+                $cars['offset'] = $offset;
+                $cars['limit'] = $limit;
+                $cars['count'] = Car::where("user_id", $user_id)->count(); 
+                $response = $this->getReponse(true, 200, 'Success', $cars);
+            }
+        } catch (\Exception $e) {
+            $response = $this->getReponse(false, 500, $e->getMessage());  
         }
+
+        return $response;
     }
 
     /**

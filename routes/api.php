@@ -19,17 +19,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::post('register', 'UserController@register');
-Route::post('login', 'UserController@authenticate');
+Route::post('login', 'UserController@login');
 Route::post('checkemail', 'UserController@checkEmail');
-Route::get('cars', 'CarController@index');
+Route::get('getallcars', 'CarController@getallcars');
 
 Route::group(['middleware' => ['jwt.verify']], function () {
-    
-    Route::get('user/cars', 'CarController@userCars');
-    Route::get('car/{id}/edit',        'CarController@edit');
-    Route::delete('car/destroy/{id}',      'CarController@destroy');
-    Route::post('car/store', 'CarController@store');
-    Route::post('car/update', 'CarController@update');
 
-    Route::get('user', 'UserController@getAuthenticatedUser');
+    Route::get('userdetail', 'UserController@getAuthenticatedUser');
+    
+    Route::get('user/cars', 'CarController@getUserCreatedCars');
+    Route::get('car/{id}/detail', 'CarController@getCarDetail');
+    Route::post('car/create', 'CarController@createCar');
+    Route::post('car/update', 'CarController@updateCar');
+    Route::delete('car/{id}/delete', 'CarController@deleteCar');
+    
+    
 });

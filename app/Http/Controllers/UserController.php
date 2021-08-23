@@ -21,7 +21,7 @@ class UserController extends Controller
      * * @param {*} password 
      * @returns 
     */
-    public function authenticate(Request $request) {
+    public function login(Request $request) {
 
         try {
             $credentials = $request->only('email', 'password');

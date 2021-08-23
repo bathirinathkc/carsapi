@@ -29,14 +29,15 @@ class CarController extends Controller
             $limit = isset($limit_input) ? $limit_input : 10;
             
             $car = Car::with('users')->offset($offset)->limit($limit)->get();
-
+            $cars = [];
             if(count($car) == 0){
                 $response = $this->getReponse(false, 400, 'Data Not Found');
             }else{
-                $car['offset'] = $offset;
-                $car['limit'] = $limit;
-                $car['count'] = Car::count(); 
-                $response = $this->getReponse(true, 200, 'Success', $car);
+                $cars['listing'] = $car;
+                $cars['offset'] = $offset;
+                $cars['limit'] = $limit;
+                $cars['count'] = Car::count(); 
+                $response = $this->getReponse(true, 200, 'Success', $cars);
             }
         } catch (\Exception $e) {
             $response = $this->getReponse(false, 500, $e->getMessage());  
@@ -61,14 +62,15 @@ class CarController extends Controller
 
             $user_id = JWTAuth::parseToken()->authenticate()->id;
             $cars = Car::where("user_id", $user_id)->offset($offset)->limit($limit)->get();
-
+            $car = [];
             if(count($cars) == 0){
                 $response = $this->getReponse(false, 400, 'Data Not Found');
             }else{
-                $cars['offset'] = $offset;
-                $cars['limit'] = $limit;
-                $cars['count'] = Car::where("user_id", $user_id)->count(); 
-                $response = $this->getReponse(true, 200, 'Success', $cars);
+                $car['listing'] = $cars;
+                $car['offset'] = $offset;
+                $car['limit'] = $limit;
+                $car['count'] = Car::where("user_id", $user_id)->count(); 
+                $response = $this->getReponse(true, 200, 'Success', $car);
             }
         } catch (\Exception $e) {
             $response = $this->getReponse(false, 500, $e->getMessage());  
